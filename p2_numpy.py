@@ -10,6 +10,17 @@ import time
 #import google_libs
 #import kraken_libs
 
+# documentation 
+# The N-dimensional array --> https://numpy.org/doc/stable/reference/arrays.ndarray.html
+# Data types --> http://docs.scipy.org/doc/numpy/user/basics.types.html
+# Array creation [more] --> https://numpy.org/doc/stable/user/basics.creation.html
+# Indexing [more] --> http://docs.scipy.org/doc/numpy/user/basics.indexing.html
+# Broadcasting --> http://docs.scipy.org/doc/numpy/user/basics.broadcasting.html
+# Random sampling --> http://docs.scipy.org/doc/numpy/reference/routines.random.html
+# Mathematical functions --> https://numpy.org/doc/stable/reference/routines.math.html
+# Linear algebra --> https://numpy.org/doc/stable/reference/routines.linalg.html
+
+
 ''' create array, see specifications ''' 
 def Create_Array():
 
@@ -149,120 +160,35 @@ def Accesing_Elements():
     return
 
 
+''' arithmetic operations   ''' 
+def Arithmetic_Operations():
 
+    arr = np.array([(1,2,3,4,5),(10,20,30,40,50)])
+    print(f"original Array --> \n{arr}")
 
-''' Importing CSV ''' 
-def Import_CSV(symbol):
+    #mulpitly by 2
+    #mean = arr.mean()
+    print(f"arr * 2 --> \n{arr * 2}")
 
-    # set date as index, as we'll join it in the master df   
-    # parse_dates --> to convert dates to daytime index objects
-    # usecols --> we only pick the columns we are interested in (need of Date for the join)
-    # na_values --> to indicate that nan is nan and not an string (csv default)
-    df = pd.read_csv(f"./data/{symbol}.csv", index_col="Date", 
-                    parse_dates = True, usecols=['Date', 'Adj Close'],
-                    na_values=['nan'])
+    #dividing by 2
+    print(f"arr * 2 --> \n{arr / 2.}")
 
-    df.rename(columns = {'Adj Close':symbol}, inplace=True)         # change column name to symbol 
-    df[symbol]=pd.to_numeric(df[symbol])                            # make Adj Close float (default str)
+    #operations betweens arrays 
+    arr1 = np.array([(1,2,3,4,5),(10,20,30,40,50)])
+    print(f"Array 1 --> \n{arr1}")
+    arr2 = np.array([(100,200,300,400,500),(1,2,3,4,5)])
+    print(f"Array 2 --> \n{arr2}")
     
-    #print(f"\n df dtypes --> {df.dtypes}")
-    #print(df)
-    #print()
-    #print (df[5:8])
-    #print('symbol dataframe indexed by date\n')
-    return df
+    #adding arrays
+    print(f"arr1 + arr2 --> \n{arr1 + arr2}")
 
+    #multiply arrays element wise
+    print(f"arr1 * arr2 --> \n{arr1 * arr2}")
 
-''' Create a new dataframe that will host a timeframr of the stocks we want to analyze ''' 
-def Create_Mater_Dataframe(symbols, start_date, end_date):
+    #divide  arrays element wise
+    print(f"arr1 / arr2 --> \n{arr1 / arr2}")
 
-    # create a temporary df with selected dates 
-    dates=pd.date_range(start_date,end_date)
-    print(dates[0], dates[-1])
-
-    # create master df,  with dates as index
-    df_symbols = pd.DataFrame(index=dates)
-    print(df_symbols)
-    print("master df empty, only index\n")
-
-    for symbol in symbols:
-        df_new_symbol = Import_CSV(symbol)
-        
-        # join each symbol to the master df
-        # make sure that df has date as index otherwise we will only het NaN (no common index)
-        df_symbols = df_symbols.join(df_new_symbol, how='inner')         # inner --> join only common dates to both dataframes 
-        #df1 = df1.dropna()                                             
-
-    print (df_symbols)
-    print ('master df after join\n')
-
-    return df_symbols
-
-
-''' Slicing ''' 
-def Slicing(df_symbols):
-    
-    # get some rows
-    df2 = df_symbols.loc['2022-01-01':'2022-02-25']
-    print(df2)
-
-    #get some columns 
-    df2 = df_symbols.loc[:, ['IBM', 'GLD']]     # all columns for IBM & GLD
-    print(df2)
-    
-    #get some rows of some columns  
-    df2 = df_symbols.loc['2022-01-15':, ['IBM', 'GLD']]     # all columns for IBM & GLD
-    print(df2)
-
-    return 
-
-
-''' Normalize_Data_Symbols ''' 
-def Normalize_Data_Symbols(df_symbols):
-
-    # #divide all rows by 1st, all stoks will start as 1 (row 1 / row 1)
-    # this will allow to see the evolution of each stock compared weith day one
-    # it will allow also to compare the evlotuion of the stock even if the have different prices 
-    return df_symbols / df_symbols.iloc[0,:]  
-
-
-''' Plot_Data ''' 
-def Plot_Data(df_symbols):
-    
-    # all symbols in df
-    ax = df_symbols.plot(title='plot testing')
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Price")
-    plt.show()                  #must be called to show plots in some environments 
-
-    # only two symbols
-    #df_symbols[['IBM', 'GLD']].plot()
-    df_symbols.loc['2022-01-10':, ['IBM', 'GLD']].plot()
-    plt.show()
-
-    return 
-
-
-''' Get max close of a symbol ''' 
-def Get_Max_Close(df, symbol):
-    #print(f" Max Close {symbol} --> {df['Close'].max()}")
-    return df.loc[:,'TSLA'].max()
-
-''' Get mean of a symbol ''' 
-def Get_Mean_Close(df, symbol):
-    return df['TSLA'].mean()
-
-''' Plot a symbol ''' 
-def Plot_Symbol(df, symbol, column):
-    df[column].plot()
-    plt.show()
-    return 
-
-''' Plot two columns of a symbol ''' 
-def Plot_Columns_Symbol(df, symbol, col1, col2):
-    df[[col1, col2]].plot()
-    plt.show()
-    return 
+    return
 
 
 
@@ -300,60 +226,13 @@ def main():
     Accesing_Elements()
     g = input("return from accesing elements  .... Press any key : ")
 
-    return 
-
-
-
-
-
-    ''' Import symbols  '''
-    start_date = '2022-01-01'
-    end_date = '2022-01-21'
-    symbols = ['SPY','GOOG','IBM','GLD']  #'TSLA'
-
-    ''' Create a new dataframe that will host the stocks we want to analyze ''' 
-    df_symbols = Create_Mater_Dataframe(symbols, start_date, end_date)
-    g = input("Create_Mater_Dataframe .... Press any key : ")
-
-    ''' Slicing tests ''' 
-    Slicing(df_symbols)     
-
-    ''' Normalize_Data_Symbols ''' 
-    df_symbols_norm = Normalize_Data_Symbols(df_symbols)
-
-    ''' Plot normalized symbols vales ''' 
-    Plot_Data(df_symbols_norm)
-
-
-    #------ other tests 
-    symbol = 'TSLA'
-    ''' import csv  '''
-    df = Import_CSV(symbol)
-    g = input("Import_CSV  .... Press any key : ")
-
-    ''' get max_close symbol  '''
-    max_close = Get_Max_Close(df, symbol)
-    print (f"\nmax close {symbol} --> {max_close}")
-    g = input("Get_Max_Close  .... Press any key : ")
-
-    ''' get mean symbol  '''
-    mean_close = Get_Mean_Close(df, symbol)
-    print (f"\nmean close {symbol} --> {mean_close}")
-    g = input("Get_Mean_Close  .... Press any key : ")
-
-    ''' plot a symbol by selecting a column  '''
-    column = symbol
-    Plot_Symbol(df, symbol, column)
-    g = input("plot a symbol  .... Press any key : ")
-
-    ''' Plot two columns of a symbol ''' 
-    col1 = symbol
-    col2 = symbol
-    Plot_Columns_Symbol(df, symbol, col1, col2)
-    g = input("Plot_Columns_Symbol  .... Press any key : ")
+    ''' arithmetic operations   ''' 
+    Arithmetic_Operations()
+    g = input("return from Arithmetic_Operations  .... Press any key : ")
 
 
     return 
+
 
 
   
@@ -363,127 +242,3 @@ if __name__== "__main__":
 
 
 
-######### sources 
-
-'''
-def Get_OHLCV_720():
-    crypto_pair, interval =  google_libs.google_sheet_lib.Import_Export_Files().Get_Params_Mirror_Gsh()
-    print(f"return from GSheet lib crypto_pair --> {crypto_pair}")
-    print(f"return from GSheet lib interval --> {interval} \n")
-
-    # -- library returns df and creates a csv file (we will use the csv, the lib returns a df anyway))
-    asset_df = kraken_libs.kraken_ohlc_lib.main(crypto_pair, interval) 
-    print (f"\nlast candle processed --> {asset_df.index[-1]}    Close --> {asset_df['Close'].iloc[-1]}\n")       #last index
-
-    return 
-
-
-Importing the dataset
-def Importing_Dataset():
-    dataset = pd.read_csv('./data/ohlcv.csv')
-    #print(dataset)
-    #g = input("Importing_Dataset  .... Press any key : ")
-    return dataset
-
-
-Preprocessing dataset
-    # indexing, slicing, subsetting dataframes 
-    # https://pandas.pydata.org/docs/getting_started/intro_tutorials/03_subset_data.html
-    # https://datacarpentry.org/python-ecology-lesson/03-index-slice-subset/index.html
-    # https://datatofish.com/rows-with-nan-pandas-dataframe/
-def Preprocessing_Dataset(dataset):
-    
-    #-- drop columns 
-    #dataset.drop(['Volume'], axis = 1, inplace=True)     # don't drop it if we want volume in the plot 
-
-    #-- check nan 
-    print(pd.isnull(dataset).any(axis=0))                       #per columns 
-    print("check nan\n")
-    #nan_values = dataset[dataset['volume_pct'].isna()]         #select rows with nan 
-    #print(nan_values)
-    #g = input("pd.isnull(dataset)   .... Press any key : ")
-
-    # -- get parameters for candles/dates subset extraction 
-    #date_starts = '2021-09-29 10:15:00'   date_ends = '2021-09-29 15:15:00'
-    date_starts, date_ends =  google_libs.google_sheet_lib.Import_Export_Files().Get_Dates_Mirror_Gsh()
-    print (date_starts)
-    print (date_ends)
-
-    # -- extraxt subset from main df 
-    dataset = dataset[dataset.Date.between(date_starts, date_ends)].copy()  #not need an actual datetime-type column
-
-    # -- reset/reorder index after subselection 
-    dataset.reset_index(inplace=True,drop=True)
-    print(dataset)
-    print(f"number of candles --> {len(dataset)}")
-
-    return dataset
-
-
- mirroring candles
-def Mirroring_Candles(dataset):
-    from datetime import datetime
-    from datetime import timedelta
-
-    # https://thispointer.com/how-to-add-minutes-to-datetime-in-python/
-    # last date in master candles 
-    time_str = dataset['Date'].iloc[-1]                         # date in df is an str
-    #print(type(time_str))
-    print(f"last master candle df' --> {time_str}")
-    
-    date_format_str = '%Y-%m-%d %H:%M:%S'                       # standard    date_format_str = '%Y-%m-%d %H:%M:%S.%f'
-    given_time = datetime.strptime(time_str, date_format_str)   # create datetime object from timestamp string --> to be able to add interval 
-    print(f"last master candle given: ', {given_time}")
-    interval = 15                                               # in minutes 
-
-
-    for i in range((len(dataset)-1),-1,-1):     #(a)len=X but 0..X-1, (b)-1 go till -1 to capture index 0, (c)-1 is the regression
-        #print(dataset.iloc[i])
-         
-        if i != len(dataset)-1:                 # 1st round and for is inversed 
-            final_time = given_time + timedelta(minutes = interval)
-            print(f"proyecting next candle: processing {i}  candle {final_time}")
-            # Convert datetime object to string in specific format for the df
-            final_time_str = final_time.strftime('%Y-%m-%d %H:%M:%S')
-
-            # ohlc inversed --> open = close, high = low, low = high, close = open
-            #add a new row in last position 
-            dataset.loc[len(dataset.index)] = [final_time_str, dataset['Close'].iloc[i], dataset['Low'].iloc[i], dataset['High'].iloc[i], dataset['Open'].iloc[i], 0]
-            given_time = final_time
- 
-    return dataset
-
-
- plot candles projection 
-def Plot_Candles_Projection(dataset):
-   
-    # -- make Date index for plotting with mplfinance 
-    dataset['Date'] = pd.to_datetime(dataset.Date, infer_datetime_format=True)
-    dataset.set_index('Date', inplace=True)  
-    #print(dataset)
-
-    #print(dataset.index[-1])
-    print()
-
-    # --- plot with matplotlib / mplfinance
-    # https://github.com/matplotlib/mplfinance/blob/master/markdown/customization_and_styles.md
-    import matplotlib.pyplot as plt
-    import mplfinance as mpf                                    # pip install mpl_finance
-    print(f"mplfinance version --> {mpf.__version__}")
-    #print(f"available styles --> {mpf.available_styles()}")
-
-    # -- First we set the kwargs 
-    #kwargs = dict(type='candle',mav=(2,4,6),volume=True,figratio=(11,8),figscale=0.85)
-    kwargs = dict(type='candle',volume=True,figratio=(11,8),figscale=0.85)
-
-    # -- Plot
-    #print(mpf.plot(dataset,type='candle'))
-    print(mpf.plot(dataset, **kwargs, style='yahoo'))
-    
-    return
-
-
-
-
-
-'''
