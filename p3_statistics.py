@@ -6,6 +6,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn import metrics
 #import google_libs
 #import kraken_libs
 
@@ -54,7 +55,7 @@ def Create_Mater_Dataframe(symbols, start_date, end_date):
     return df_symbols
 
 
-    ''' Plot_Data ''' 
+''' Plot_Data ''' 
 def Plot_Data(df_symbols):
     
     # all symbols in df
@@ -71,7 +72,7 @@ def Plot_Data(df_symbols):
     return 
 
 
-    ''' compute global statistics for each stock ''' 
+''' compute global statistics for each stock ''' 
 def Global_Statistics(df_symbols):
     
     print (f"mean --> \n{df_symbols.mean()}")
@@ -81,60 +82,100 @@ def Global_Statistics(df_symbols):
     return 
 
 
-
-
-
-
-''' Slicing ''' 
-def Slicing(df_symbols):
+''' compute rolling statistics  ''' 
+def Rolling_Statistics(df_symbols):
     
-    # get some rows
-    df2 = df_symbols.loc['2022-01-01':'2022-02-25']
-    print(df2)
+    symbol = 'SPY'
+    df = df_symbols[[symbol]].copy()
+    print(f"\n symbol df --> \n{df}")
 
-    #get some columns 
-    df2 = df_symbols.loc[:, ['IBM', 'GLD']]     # all columns for IBM & GLD
-    print(df2)
+    # --- compute SMA
+    #plot data
+    ax = df[symbol].plot(title="SPY rolling mean", label='SPY')
     
-    #get some rows of some columns  
-    df2 = df_symbols.loc['2022-01-15':, ['IBM', 'GLD']]     # all columns for IBM & GLD
-    print(df2)
-
-    return 
-
-
-''' Normalize_Data_Symbols ''' 
-def Normalize_Data_Symbols(df_symbols):
-
-    # #divide all rows by 1st, all stoks will start as 1 (row 1 / row 1)
-    # this will allow to see the evolution of each stock compared weith day one
-    # it will allow also to compare the evlotuion of the stock even if the have different prices 
-    return df_symbols / df_symbols.iloc[0,:]  
-
-
-
-
-''' Get max close of a symbol ''' 
-def Get_Max_Close(df, symbol):
-    #print(f" Max Close {symbol} --> {df['Close'].max()}")
-    return df.loc[:,'TSLA'].max()
-
-''' Get mean of a symbol ''' 
-def Get_Mean_Close(df, symbol):
-    return df['TSLA'].mean()
-
-''' Plot a symbol ''' 
-def Plot_Symbol(df, symbol, column):
-    df[column].plot()
+    #compute rolling mean 
+    window=20
+    sma = df['SPY'].rolling(window).mean()
+    
+    # add rolling mean to same plot 
+    sma.plot(label='Rolling mean', ax=ax)
+    
+    #plotting 
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Price")
+    ax.legend(loc='upper left')
     plt.show()
-    return 
 
-''' Plot two columns of a symbol ''' 
-def Plot_Columns_Symbol(df, symbol, col1, col2):
-    df[[col1, col2]].plot()
+    # ---- Compute Bollinger Bands 
+    # 1.Compute rolling mean
+    df['sma']=df['SPY'].rolling(window).mean()
+
+    # 2. compute rolling standard deviation 
+    df['std']=df['SPY'].rolling(window).std()
+
+    # 3. Compute upper and lower bands 
+    df['upper']=df['SPY'] + (df['std'] * 2)
+    df['lower']=df['SPY'] - (df['std'] * 2)
+
+    # Plot closing prices, SMA, bollinger bands
+    ax = df['SPY'].plot(title="Bollinger Bands", label='SPY')
+    df['sma'].plot(label='SMA', ax=ax)
+    df['upper'].plot(label='Upper Band', ax=ax)
+    df['lower'].plot(label='Lower Band', ax=ax)
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Price")
+    ax.legend(loc='upper left')
     plt.show()
-    return 
+    
+    # 1 ---- Compute Daily returns  
+    print(f"df -->\n{df}")
 
+    # create a new column with daily returns
+    # daily returns are implicitly normallized 
+
+    #method 1 --> equation 
+    # we need to use .values, if no pandas uses index and we get wrong results 
+    # loc uses index, we cannot simple put numbers (or index range, or call .index) 
+    # df.loc[df.index[1:],'dayret'] = (df.loc[df.index[1:],'SPY']/df.loc[df.index[:-1],'SPY'].values) - 1
+    # df.loc[df.index[0],'dayret'] = 0        #1st row = 0 we cannot compute itto replace NaN  
+
+    #method 2 --> pandas 
+    # compute daily returns using pandas instead equation 
+    df['dayret'] = (df['SPY']/df['SPY'].shift(1)) -1  
+    df.loc[df.index[0],'dayret'] = 0        #1st row = 0 we cannot compute it 
+    
+    print(f"df -->\n{df}") 
+
+    # Daily returns mean 
+    print(f"daily returns mean --> {df['dayret'].mean()}")
+
+    # Plot closing prices, daily returns 
+    ax = df['dayret'].plot(title="Returns", label='Daily Returns')
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Price")
+    ax.legend(loc='upper left')
+    plt.show()
+
+
+    # 2 ---- Compute Cumulative returns 
+    # 2.1 method 1 - equation 
+    df.loc[df.index[1:],'cumret'] = (df.loc[df.index[1:],'SPY']/df.loc[df.index[0],'SPY']) - 1
+    df.loc[df.index[0],'cumret'] = 0        #1st row = 0 we cannot compute it to replace NaN 
+
+    print(f"df -->\n{df}") 
+
+    #Cumulative returns (in this case from the beginning (index 1) to the end)
+    print(f"Cumulative returns --> {(df.loc[df.index[-1],'SPY']/df.loc[df.index[0],'SPY']) - 1}")
+
+    # Plot closing prices, daily returns 
+    ax = df['cumret'].plot(title="Returns", label='Cumulative Returns')
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Price")
+    ax.legend(loc='upper left')
+    plt.show()
+
+
+    return 
 
 
 
@@ -160,47 +201,11 @@ def main():
     Global_Statistics(df_symbols)
     g = input("return from Global Statistics .... Press any key : ")
 
+    ''' Rolling Statistics ''' 
+    Rolling_Statistics(df_symbols)
+    g = input("return from Rolling Statistics .... Press any key : ")
+
     return
-
-    ''' Slicing tests ''' 
-    Slicing(df_symbols)     
-
-    ''' Normalize_Data_Symbols ''' 
-    df_symbols_norm = Normalize_Data_Symbols(df_symbols)
-
-    ''' Plot normalized symbols vales ''' 
-    Plot_Data(df_symbols_norm)
-
-
-    #------ other tests 
-    symbol = 'TSLA'
-    ''' import csv  '''
-    df = Import_CSV(symbol)
-    g = input("Import_CSV  .... Press any key : ")
-
-    ''' get max_close symbol  '''
-    max_close = Get_Max_Close(df, symbol)
-    print (f"\nmax close {symbol} --> {max_close}")
-    g = input("Get_Max_Close  .... Press any key : ")
-
-    ''' get mean symbol  '''
-    mean_close = Get_Mean_Close(df, symbol)
-    print (f"\nmean close {symbol} --> {mean_close}")
-    g = input("Get_Mean_Close  .... Press any key : ")
-
-    ''' plot a symbol by selecting a column  '''
-    column = symbol
-    Plot_Symbol(df, symbol, column)
-    g = input("plot a symbol  .... Press any key : ")
-
-    ''' Plot two columns of a symbol ''' 
-    col1 = symbol
-    col2 = symbol
-    Plot_Columns_Symbol(df, symbol, col1, col2)
-    g = input("Plot_Columns_Symbol  .... Press any key : ")
-
-
-    return 
 
 
   
